@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -20,7 +22,7 @@ class _ControlState extends State<Control> {
   void handleSubmit() async {
     try {
       setState(() { _loading = true; });
-        await http.post(
+      final response = await http.post(
         Uri.parse('http://${_controller.text}'),
         headers: <String, String>{
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -29,7 +31,46 @@ class _ControlState extends State<Control> {
           'value': _currentSliderValue.round().toString()
         }
       ).timeout(const Duration(seconds: 4));
-    } finally {
+
+      if(response.statusCode != 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            content: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: Color.fromARGB(255, 247, 44, 64),
+                borderRadius: BorderRadius.all(Radius.circular(20))
+              ),
+              child: const Text(
+                'Request Failed.',
+                style: TextStyle(color: Colors.white),
+              ),
+            )
+          ),
+        );
+      }
+    } catch(e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            content: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: Color.fromARGB(255, 247, 44, 64),
+                borderRadius: BorderRadius.all(Radius.circular(20))
+              ),
+              child: const Text(
+                'Request Failed. ESP unreachable at specified address',
+                style: TextStyle(color: Colors.white),
+              ),
+            )
+          ),
+      );
+    }
+    finally {
       setState(() { _loading = false; });
     }
   }
